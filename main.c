@@ -1,35 +1,23 @@
-#include <stdio.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <string.h>
-#define FLAGS O_WRONLY | O_CREAT | O_EXCL | O_TRUNC
-#define PERMISSION S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH
-
+#include<sys/types.h>
+#include<sys/stat.h>
+#include<fcntl.h>
+#include<unistd.h>
+#include<string.h>
 int main()
 {
-    /************Declaration of local variables************/
-    int fd , blockcount, blocksize , wr ;
-
-    /** Opening of file with Low level IO**/
-    fd = open ("bufio", FLAGS , PERMISSION);
-    if (fd == -1) {
-        perror ("ERROR!!!!\n") ;
-    }
-
-    /**Taking input from the user**/
-    printf ( "Enter the number of times of buffer to get printed : \n");
-    scanf ("%d", &blockcount );
-    printf("Enter blocksize : ");
-    scanf("%d", &blocksize );
-
-    char buf[blocksize];
-
-    while ( blocksize ) {
-     wr = write (fd,buf,blocksize) ;
-     blocksize--;
-    }
-
+    prog1();
     return 0;
+}
+
+void prog1() {
+    int fd;
+    char *c="Hello World\n";
+    fd=open("hello.txt",O_CREAT|O_WRONLY|O_TRUNC,S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IWGRP|S_IROTH);
+    if(fd==-1)
+        perror("ERROR!!!\n");
+    ssize_t nr=write(fd,c,strlen(c));
+    if(nr==-1)
+        perror("ERROR!!!\n");
+
+    return;
 }
