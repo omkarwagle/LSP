@@ -23,9 +23,6 @@ int main()
     while ( fd = fread (buf , 1 , 1 , RD) > 0 ) {
         fd = fwrite (buf , fd , 1 , WR);
     }
-
-    fd = fseek ( WR , 0 , SEEK_END );
-    fputc('\0' , WR );
-
+    
     return 0;
 }
