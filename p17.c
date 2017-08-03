@@ -1,108 +1,64 @@
-/************************************Header Files*************************************/
+/* Build histogram of modification hour of files */
+
 #include <stdio.h>
-#include <stdlib.h>
 #include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <dirent.h>
+#include <stdlib.h>
 #include <time.h>
-#include <limits.h>
+#include <dirent.h>
 #include <string.h>
-/************************************End of Block*************************************/
+#include <unistd.h>
 
-int readDirectory(char *) ; //Function Declaration
-
-/************************Declaration of Global Variables**********************/
-DIR *d ;
-struct dirent *info ;
-struct stat sb ;
-struct tm *t ;
-int i = 0 ;
-time_t timer ;
+void processPath(char *) ;
 int hist[24] ;
-char *originalPath = "/home/omkarwagle/LSP/p30";
-/******************************End of Block***********************************/
 
 int main(void) {
 
-  char getDirectory[200] ;
+  int i ;
+  char *originalPath = "/home/omkarwagle/LSP" ;
 
-  d = opendir(originalPath) ; //opening of original path directory
-  chdir(originalPath) ; //changing directory to current directory
-  while ( (info = readdir(d)) != NULL) {
-    stat(info->d_name , &sb) ;
-    if(info->d_name[0] == '.') {   //avoiding hidden files
-      continue ;
-    }
+  processPath(originalPath) ;
 
-    if (S_ISREG(sb.st_mode)) {
-      timer = time(NULL) ;
-      t = localtime(&sb.st_mtime) ;
-      printf("Hours : %d\n" , t->tm_hour) ;
-      hist[t->tm_hour]++ ; //creating a histogram record
-    }
-
-      if(S_ISDIR(sb.st_mode)) { //Modifying pathname
-        strcpy(getDirectory , originalPath) ;
-        strcat(getDirectory , "/") ;
-        strcat(getDirectory , info->d_name) ;
-        readDirectory(getDirectory) ;
-      }
-    }
-
-    for(i = 0;i < 24 ; i++){
+  for(i = 0 ; i < 24 ; i++) {
       printf("Hour %d : %d\n" , i , hist[i]) ;
     }
-
-  closedir(d) ;
 
   return EXIT_SUCCESS ;
 }
 
-int readDirectory(char *getDirectory) {
+void processPath(char *pathName) {
 
-  /**************************Declaration of Local Variables*************************/
-  DIR *insideDirectory ;
-  struct dirent *direct ;
-  struct stat sb1 ;
-  struct tm *t1 ;
-  char fullName[100] ;
-  /*******************************End of Block*********************************/
+  DIR *d ;
+  struct stat sb ;
+  struct dirent *info ;
+  char path[PATH_MAX] ;
+  struct tm *fileTime ;
 
-  chdir(getDirectory) ;
-  insideDirectory = opendir(getDirectory) ;
-  strcpy(fullName , getDirectory) ;
-  printf("Name : %s\n" , fullName) ;
-  stat(fullName , &sb1) ;
+  d = opendir(pathName) ;
+  while( (info = readdir(d)) != NULL) {
 
-  if(S_ISREG(sb1.st_mode)) {            //checking for regular files
-    t = localtime(&sb.st_mtime) ;
-    printf("Hours : %d\n" , t->tm_hour) ;
-    hist[t->tm_hour]++ ;
-    return 0 ;
-  }
+    strcpy(path , pathName) ;
+    strcat(path , "/") ;
+    strcat(path , info->d_name) ;
+    stat(path , &sb) ;
+    printf("Path : %s\n" , path)  ;
 
-  while ( (direct = readdir(insideDirectory)) != NULL) {
-    stat(direct->d_name , &sb1) ;
-    printf("%s\n" , direct->d_name) ;
-
-    if(direct->d_name[0] == '.') {
+    if(info->d_name[0] == '.') {
       continue ;
     }
 
-    if (S_ISREG(sb1.st_mode)) {         //checking for regular files
-      t1 = localtime(&sb1.st_mtime) ;
-      printf("File : %s\n" , direct->d_name) ;
-      printf("Hours : %d\n" , t1->tm_hour) ;
-      hist[t1->tm_hour]++ ;
+    if(S_ISDIR(sb.st_mode)) {
+      if(S_ISREG(sb.st_mode) == 0) {
+        processPath(path) ;
+      }
     }
-
-    if (S_ISDIR(sb1.st_mode) && direct != NULL) {          //checking for directories
-      strcat(fullName , "/") ;
-      strcat(fullName , direct->d_name) ;
-      readDirectory(fullName) ; //calling function recursively
+    else {
+      fileTime = localtime(&sb.st_mtime) ;
+      hist[fileTime->tm_hour]++ ;
+      printf("Time : %d\n" , fileTime->tm_hour) ;
     }
   }
 
-  return 0 ;
+  closedir(d) ;
+
+  return ;
 }
